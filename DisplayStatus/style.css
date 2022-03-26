@@ -1,0 +1,88 @@
+body {
+  /* display: flex;
+  justify-content: center;
+  align-items: center; */
+  height: 100vh;
+  margin: 0;
+  font-family: 'Open Sans', sans-serif;
+  background: #222;
+  background-image: url('https://source.unsplash.com/1600x900/?landscape');
+  font-size: 140%;
+}
+ 
+.audio {
+  margin: 15px 15px;
+}
+
+.card {
+  background: #000000d0;
+  color: white;
+  padding: 2em;
+  border-radius: 30px;
+  width: 100%;
+  max-width: 1000px;
+  margin: 10px 260px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.temp {
+  margin: 0;
+  margin-bottom: 0.4em;
+}
+
+.info {
+  display: flex;
+  align-items: center;
+}
+
+input[type="checkbox"] {
+  margin-left: 20px;
+  width: 30px;
+  height: 30px;
+}
+
+input[type="text"] {
+  height: 25px;
+  width: 350px;
+}
+
+.equip {
+  font-size: 30px;
+}
+
+.flex {
+  display: flex;
+  align-items: center;
+}
+
+.description {
+  text-transform: capitalize;
+  margin-left: 8px;
+}
+
+.weather {
+  border-right: 4px solid white;
+  padding-right: 109px;
+  margin-right: 100px;
+}
+
+.weather.loading {
+  visibility: hidden;
+  max-height: 20px;
+  position: relative;
+}
+
+.weather.loading:after {
+  visibility: visible;
+  content: "Loading...";
+  color: white;
+  position: absolute;
+  top: 0;
+  left: 20px;
+}
+
+.status {
+  margin-left: 30px;
+}
