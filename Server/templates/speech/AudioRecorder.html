@@ -1,0 +1,41 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" type="text/css" href="{% static 'css/AudioRecorder.css'%}"/>
+  <title>Document</title>
+</head>
+<body>
+  <header>
+    <a href="DisplayStatus/index.html"><img src="{% static 'images/home.svg'%}" alt="home" class="home"> </a>
+  </header>
+  <div class="console">
+    <div class="div-title">
+      <img src="{% static 'images/microphone.svg'%}" alt="voice" class="voice">
+      <h1 class="title">Ghi âm để biết thông tin</h1>
+    </div>
+ 
+    <div class="stopWatch"> </div>
+
+    <div class="reset">
+      <a href="/"><img src="{% static 'images/reset.svg'%}" alt="reset" class="reset"></a>
+    </div>
+
+    <button class="record">Record</button>
+    <button class="stop">Stop</button>
+  </div>
+
+  <div class="audio" id="audio">
+
+  </div>
+
+  <footer>
+    <div class="devices-status">Status</div>
+  </footer>
+ 
+  <script src="{% static 'javascript/AudioRecorder.js'%}"></script>
+</body>
+</html>
