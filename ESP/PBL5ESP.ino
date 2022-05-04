@@ -45,13 +45,39 @@ String timeStamp;
 #if FILESYSTEM == SPIFFS
 #include <SPIFFS.h>
 #endif
+//MP3
+#include <Arduino.h>
+#include "DFRobotDFPlayerMini.h"
+HardwareSerial mySerial(1);
+int i = -1;
+
+DFRobotDFPlayerMini myDFPlayer;
 
 WebServer server(80);
 File fsUploadFile;
 
 
 void setup() {
- Serial.begin(115200);
+  mySerial.begin(9600, SERIAL_8N1, 16, 17);
+  Serial.begin(115200);
+  if (!myDFPlayer.begin(mySerial)) {  
+    Serial.println(myDFPlayer.readType(), HEX);
+    Serial.println(F("Error starting, check:"));
+    Serial.println(F("1.The module connection."));
+    Serial.println(F("2.If the SD card was inserted correctly."));
+    while (true);
+  }
+  myDFPlayer.setTimeOut(500);
+
+  myDFPlayer.outputDevice(DFPLAYER_DEVICE_SD);
+
+  Serial.print(F("Files found on SD card: "));
+  Serial.println(myDFPlayer.readFileCounts(DFPLAYER_DEVICE_SD));
+
+  myDFPlayer.EQ(0);    
+  myDFPlayer.play(1);
+  
+ 
  Serial.println("Tro ly ao!");
  Serial.print("Connecting to ");
  Serial.println(wifiName);
@@ -76,7 +102,8 @@ void setup() {
 }
 
 void loop() {
- delay(2000);
+ server.handleClient();
+ delay(2);
  if (Serial.available() > 0){
  String str = Serial.readString();
  Serial.print("Nhận chức năng:");
