@@ -1,7 +1,10 @@
 #include "DHT.h"
 #include "String.h"
+#include "ArduinoJson.h"
 #define BUTTON_PIN 25
 #define led  33
+#define den  18
+#define quat 19
 #define DHTPIN 13 // chân kết nối cảm biến nhiệt độ
 #define DHTTYPE DHT11
 DHT dht(DHTPIN, DHTTYPE);
@@ -59,7 +62,7 @@ DFRobotDFPlayerMini myDFPlayer;
 
 //Send File to Server
 #include <WiFiClientSecure.h>
-const char*  server = "a631-2405-4802-6074-90b0-a937-c186-42bc-f746.ap.ngrok.io";  // Server URL
+const char*  server = "2dfe-14-236-43-21.ap.ngrok.io";  // Server URL
 
 const char* test_root_ca= \
      "-----BEGIN CERTIFICATE-----\n" \
@@ -115,6 +118,8 @@ void setup() {
   client.setCACert(test_root_ca);
   pinMode(BUTTON_PIN, INPUT_PULLUP);
   pinMode(led, OUTPUT); 
+  pinMode(den, OUTPUT);
+  pinMode(quat, OUTPUT);
   myDFPlayer.setTimeOut(500);
 
   myDFPlayer.outputDevice(DFPLAYER_DEVICE_SD);
@@ -123,7 +128,7 @@ void setup() {
   Serial.println(myDFPlayer.readFileCounts(DFPLAYER_DEVICE_SD));
 
   myDFPlayer.EQ(0);    
-  myDFPlayer.play(1);
+  myDFPlayer.playFolder(1, 1);
   delay(5000);
 }
 
@@ -158,16 +163,17 @@ void loop() {
     free(flash_write_buff);
     flash_write_buff = NULL;
     listSPIFFS();
-    SendFile();
+    SendFile(myDFPlayer);
+//    myDFPlayer.next();
   }
 }
 //Send file to Server
-void SendFile(){
-    Serial.println("\nStarting connection to server...");
+void SendFile(DFRobotDFPlayerMini myDFPlayer){
+    //Serial.println("\nStarting connection to server...");
   if (!client.connect(server, 443))
     Serial.println("Connection failed!");
   else {
-    Serial.println("Connected to server!");
+    //Serial.println("Connected to server!");
 
      if(!SPIFFS.begin(true)){
        Serial.println("An Error has occurred while mounting SPIFFS");
@@ -180,7 +186,7 @@ void SendFile(){
     }
       String boundary = "--------------------------928315622432575348929725";
       String postHeader = "POST /base/recognition HTTP/1.1\r\n";
-      postHeader += "Host: a631-2405-4802-6074-90b0-a937-c186-42bc-f746.ap.ngrok.io\r\n";
+      postHeader += "Host: 2dfe-14-236-43-21.ap.ngrok.io\r\n";
       postHeader += "Connection: keep-alive\r\n";
       postHeader += "Content-Type: multipart/form-data; boundary=" + boundary + "\r\n";
   
@@ -231,13 +237,166 @@ void SendFile(){
         break;
       }
     }
+    char json[1000]="";
     while (client.available()) {
       char c = client.read();
-      myDFPlayer.play(1);
-      Serial.write(c);
+      char ch[1];
+      ch[0] = c;
+      ch[1] = '\0';
+      strcat(json,ch);
+    }
+    Serial.println(json);
+    StaticJsonDocument<256> doc;
+    DeserializationError err = deserializeJson(doc,json);
+    if(err){
+      Serial.println("ERROR:"); 
+    }
+    else{
+      int acid         =  doc["action"]["action_id"];
+      const char* type =  doc["action"]["type"];     
+      if ( acid == 2){
+         int content = doc["content"]["device_id"];
+         bool state = doc["content"]["state"];
+         if(content==1)
+         {
+          if (state == true){
+            digitalWrite(den,HIGH);
+          }
+          else{
+            digitalWrite(den,LOW);
+          }
+         }
+         else if(content==2)
+         {
+          if (state == true){
+            digitalWrite(quat,HIGH);
+          }
+          else{
+            digitalWrite(quat,LOW);
+          }
+         }
+         else{
+          if (state == true){
+            myDFPlayer.playFolder(12,1);
+          }
+          else{
+            myDFPlayer.stop();
+          }      
+         }
+      }
+      else {
+        int coid = doc["content"]["id"];
+        if (coid==1){
+          int ho = doc["content"]["main"]["hour"];
+          int mi = doc["content"]["main"]["min"];
+          reGio(myDFPlayer,ho,mi);
+        }
+        else if(coid==2){
+          int ye = doc["content"]["main"]["year"];
+          int mo = doc["content"]["main"]["month"];
+          int da = doc["content"]["main"]["day"]; 
+          reDate(myDFPlayer,da,mo,ye);     
+        }
+        else if(coid==3){
+          int temp = doc["content"]["main"]["temperature"];
+                
+        }
+        else {
+          int weid = doc["content"]["main"]["weather_id"];         
+        }
+        
+      }
+////      int coid = doc["content"]["id"];
+//////      Serial.println(acid);
+//////      Serial.println(coid);
+//      Serial.println(coid);
     }
     client.stop();
   }
+}
+void reDate(DFRobotDFPlayerMini myDFPlayer,int da,int mo, int year){
+    myDFPlayer.playFolder(2,1);
+    delay(2500);
+//    myDFPlayer.playFolder(10,10);
+//    delay(1100);
+//    myDFPlayer.playFolder(10,8);
+//    delay(1100);
+    playNum(da);
+    myDFPlayer.playFolder(11,2);
+    delay(1200);
+//    myDFPlayer.playFolder(10,5);
+    playNum(mo);
+    delay(1000);
+    myDFPlayer.playFolder(11,1);
+    delay(3000);
+}
+void reGio(DFRobotDFPlayerMini myDFPlayer,int ho,int mi){
+      myDFPlayer.playFolder(3,1);
+      delay(2500);
+      playNum(ho);
+      myDFPlayer.playFolder(3,2);
+      delay(1100);
+      playNum(mi);
+      myDFPlayer.playFolder(3,3);
+      delay(1100);
+//      if(ho==10){
+//        myDFPlayer.playFolder(10,10);
+//        delay(1100);
+//      }
+//      else if(ho<10){
+//        myDFPlayer.playFolder(10,ho);
+//        delay(1100);
+//      }
+//      else {
+//        int h1 = ho/10;
+//        myDFPlayer.playFolder(10,h1*10);
+//        delay(1100);
+//        int h2 = ho%10;
+//        if(h2==1){
+//           myDFPlayer.playFolder(10,99);
+//           delay(1100);
+//        }
+//        else{
+//          myDFPlayer.playFolder(10,h2);
+//          delay(1100);
+//          }
+//                   
+//      }
+//    myDFPlayer.playFolder(10,10);
+//    delay(1100);
+//    myDFPlayer.playFolder(10,8);
+//    delay(1100);
+//    myDFPlayer.playFolder(11,2);
+//    delay(1200);
+//    myDFPlayer.playFolder(10,5);
+//    delay(1300);
+//    myDFPlayer.playFolder(11,1);
+//    delay(3000);
+}
+void playNum(int ho)
+{
+        if(ho==10){
+        myDFPlayer.playFolder(10,10);
+        delay(1100);
+      }
+      else if(ho<10){
+        myDFPlayer.playFolder(10,ho);
+        delay(1100);
+      }
+      else {
+        int h1 = ho/10;
+        myDFPlayer.playFolder(10,h1*10);
+        delay(1100);
+        int h2 = ho%10;
+        if(h2==1){
+           myDFPlayer.playFolder(10,99);
+           delay(1100);
+        }
+        else{
+          myDFPlayer.playFolder(10,h2);
+          delay(1100);
+          }             
+      }
 }
 void Date(NTPClient timeClient){
   timeClient.forceUpdate();
