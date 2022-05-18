@@ -10,19 +10,19 @@ def getData(request):
     data  = Audiofile.objects.all()
     audioSerializer = AudioSerializer(data,many=True)
     return Response(audioSerializer.data)
-
+    
 @api_view(['POST'])
 def receiveData(request):
-    if request.FILES:
+    audioSerializer = AudioSerializer(data=request.data)
+    if audioSerializer.is_valid():
         files = request.FILES.get('audio')
         function = HMM.recognition.validate(files)
-        return Response({'message':function})
-    return Response({'message':'error'})
-    # audioSerializer = AudioSerializer(data=request.data)
-    # if audioSerializer.is_valid():
-    #     files = request.FILES.get('audio')
-    #     function = HMM.recognition.validate(files)
-    #     # audioSerializer.save()
-    #     return Response({'message':function})
-    # return Response(audioSerializer.errors)
+        intent = HMM.recognition.intent(function)
+        audioSerializer.save();
+        return Response(intent)
+    return Response(audioSerializer.errors)
 
+@api_view(['POST'])
+def receiveESP(request):
+    print(request)
+    return Response({'message':'AAAAA'})

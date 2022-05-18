@@ -25,8 +25,8 @@ SECRET_KEY = 'django-insecure-oqc-*p&v7l8wz=jb66+9av84o92a4z!88a&*iv36+0_-&ie=ab
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-# ALLOWED_HOSTS = ['localhost', '127.0.0.1']
-
+ALLOWED_HOSTS = ['127.0.0.1','2dfe-14-236-43-21.ap.ngrok.io']
+# ALLOWED_HOSTS = ['example-subdomain.loca.lt']
 # WHITENOISE_AUTOREFRESH = True
 # Application definition
 
