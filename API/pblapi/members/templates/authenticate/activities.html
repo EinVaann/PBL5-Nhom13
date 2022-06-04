@@ -1,0 +1,23 @@
+{% extends 'authenticate/base.html' %}
+
+{% block content %}
+
+{% if form.errors %}
+	<div class="alert alert-warning alert-dismissible fade show" role="alert">
+    There was an error
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+{% endif %}	
+	<div class="shadow p-4 mb-5 bg-body rounded">
+	<h1>Recent activites</h1>
+
+<br/>
+        <ul>
+            {% for activity in activities %}
+            <li>{{ activity.time_sent }}</li>
+            {% endfor %}
+        </ul>
+		
+</div>
+<br/><br/>	
+{% endblock %}

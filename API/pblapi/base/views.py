@@ -25,4 +25,4 @@ def receiveData(request):
 @api_view(['POST'])
 def receiveESP(request):
     print(request)
-    return Response({'message':'AAAAA'})
+    return Response({'message':'response'})

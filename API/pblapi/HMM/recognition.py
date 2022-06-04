@@ -15,13 +15,26 @@ for f in file_name:
         model.append(pickle.load(file))   
 # ['model_batden.pkl', 'model_batnhac.pkl', 'model_batquat.pkl', 'model_tatden.pkl', 'model_tatnhac.pkl', 'model_tatquat.pkl',
 #  'model_xemgio.pkl', 'model_xemngay.pkl', 'model_xemnhietdo.pkl', 'model_xemthoitiet.pkl']
+# print(file_name)
+
+def get_model():
+    model = []
+    file_name = [i for i in os.listdir('HMM/model') if i.endswith('.pkl')]
+    for f in file_name:
+        file_paths = os.path.join('HMM/model/',f)
+        with open(file_paths,'rb') as file:
+            model.append(file)
+        print(type(file))  
+    return model
+
 def get_mfcc(file_path):
     y, sr = librosa.load(file_path)  
+    yt , idx = librosa.effects.trim(y, top_db=10)
     hop_length = math.floor(sr * 0.010)  
     win_length = math.floor(sr * 0.025)  
     
     mfcc = librosa.feature.mfcc(
-        y=y, sr=sr, n_mfcc=12, n_fft=1024,
+        y=yt, sr=sr, n_mfcc=12, n_fft=1024,
         hop_length=hop_length, win_length=win_length)
     # subtract mean from mfcc --> normalize mfcc
     mfcc = mfcc - np.mean(mfcc, axis=1).reshape((-1, 1))
@@ -39,10 +52,12 @@ def validate(audioFile):
     return np.argmax(scores)
 
 def intent(function_index):
-    function_index = 0
+    # print(function_index)
+    # function_index = 7
     intent = {}
     action = {}
     content = {}
+
     if function_index>5:
         action['action_id'] = 1
         action['type'] = 'inform'
@@ -72,7 +87,7 @@ def intent(function_index):
     if function_index == 1 or function_index == 4:
         content['type'] = 'device'
         content['name'] = 'music'
-        content['device_id'] = 1
+        content['device_id'] = 3
         content['state'] = (function_index == 1)
     elif function_index == 2 or function_index == 5:
         content['type'] = 'device'
@@ -82,19 +97,21 @@ def intent(function_index):
     elif function_index == 0 or function_index == 3:
         content['type'] = 'device'
         content['name'] = 'light'
-        content['device_id'] = 0
+        content['device_id'] = 1
         content['state'] = (function_index == 0)
 
     intent['status'] = 'success'
     intent['action'] = action
     intent['content'] = content
+
+    print(intent)
     return intent
 
 def getContent(function_index):
     main_content = {}
     if function_index == 6:
         current_time = (str(datetime.now().time())).split('.')[0]
-        hour,min,sec = current_time.split(':')
+        hour,min,_ = current_time.split(':')
         main_content['hour'] = hour
         main_content['min'] = min
     elif function_index == 7:

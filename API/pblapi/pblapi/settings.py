@@ -25,13 +25,14 @@ SECRET_KEY = 'django-insecure-oqc-*p&v7l8wz=jb66+9av84o92a4z!88a&*iv36+0_-&ie=ab
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-ALLOWED_HOSTS = ['127.0.0.1','2dfe-14-236-43-21.ap.ngrok.io']
+ALLOWED_HOSTS = ['127.0.0.1','37b1-14-236-47-31.ap.ngrok.io']
 # ALLOWED_HOSTS = ['example-subdomain.loca.lt']
 # WHITENOISE_AUTOREFRESH = True
 # Application definition
 
 INSTALLED_APPS = [
     'base.apps.BaseConfig',
+    'members.apps.MembersConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -92,12 +93,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+         'OPTIONS': {
+            'min_length': 6,
+        }
     },
 ]
 
