@@ -1,13 +1,13 @@
-#include "DHT.h"
+//#include "DHT.h"
 #include "String.h"
 #include "ArduinoJson.h"
 #define BUTTON_PIN 25
 #define led  33
 #define den  18
-#define quat 19
-#define DHTPIN 13 // chân kết nối cảm biến nhiệt độ
-#define DHTTYPE DHT11
-DHT dht(DHTPIN, DHTTYPE);
+#define quat 5
+//#define DHTPIN 13 // chân kết nối cảm biến nhiệt độ
+//#define DHTTYPE DHT11
+//DHT dht(DHTPIN, DHTTYPE);
 // Micro INMP441
 #include <driver/i2s.h>
 #include <SPIFFS.h>
@@ -29,15 +29,17 @@ const int headerSize = 44;
 #include <WiFi.h>
 #include <NTPClient.h>
 #include <WiFiUdp.h>
-const char* wifiName = "BlueBery";
-const char* password = "1234567890";
+//const char* wifiName = "Family";
+//const char* password = "danthy2103";
+String wifiname = "";
+String pass = "";
 const char* host = "esp32fs";
 
-WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP);
-String formattedDate;
-String dayStamp;
-String timeStamp;
+//WiFiUDP ntpUDP;
+//NTPClient timeClient(ntpUDP);
+//String formattedDate;
+//String dayStamp;
+//String timeStamp;
 //Down File
 #include <WiFiClient.h>
 #include <WebServer.h>
@@ -62,7 +64,8 @@ DFRobotDFPlayerMini myDFPlayer;
 
 //Send File to Server
 #include <WiFiClientSecure.h>
-const char*  server = "2dfe-14-236-43-21.ap.ngrok.io";  // Server URL
+
+const char*  server = "d24b-14-236-47-31.ap.ngrok.io";  // Server URL
 
 const char* test_root_ca= \
      "-----BEGIN CERTIFICATE-----\n" \
@@ -87,10 +90,47 @@ const char* test_root_ca= \
      "-----END CERTIFICATE-----\n";
 WiFiClientSecure client;
 
+
 void setup() {
-  mySerial.begin(9600, SERIAL_8N1, 16, 17);
+  
+  
   Serial.begin(115200);
-  if (!myDFPlayer.begin(mySerial)) {  
+
+  Serial1.begin(19200, SERIAL_8N1,27,26);
+  while (true)
+  {
+    if (Serial1.available()) {
+    wifiname=Serial1.readString();
+    break;}
+   
+  }
+  delay(100);
+  Serial.print("WifiName:");
+  Serial.println(wifiname);
+   while (true)
+  {
+    if (Serial1.available()) {
+      pass=Serial1.readString();
+      break;}
+  }
+  delay(100);
+  Serial.print("password:");
+  Serial.println(pass);
+  const char* wifiName = wifiname.c_str();
+  const char* password = pass.c_str();
+  WiFi.begin(wifiName, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(3000);
+    Serial.print(".");
+  }
+  Serial1.print(wifiname);
+  Serial1.flush();
+  delay(100);
+  Serial1.end();
+  
+
+    mySerial.begin(9600, SERIAL_8N1, 16, 17);
+   if (!myDFPlayer.begin(mySerial)) {  
     Serial.println(myDFPlayer.readType(), HEX);
     Serial.println(F("Error starting, check:"));
     Serial.println(F("1.The module connection."));
@@ -100,26 +140,21 @@ void setup() {
   
 
  
- Serial.println("Tro ly ao!");
- Serial.print("Connecting to ");
- Serial.println(wifiName);
- WiFi.begin(wifiName, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(3000);
-    Serial.print(".");
-  }
-  Serial.println("");
-  Serial.println("WiFi connected.");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
-  timeClient.begin();
-  timeClient.setTimeOffset(25200);  
-  dht.begin();
+
+//  Serial.println("");
+//  Serial.println("WiFi connected.");
+//  Serial.println("IP address: ");
+//  Serial.println(WiFi.localIP());
+//  timeClient.begin();
+//  timeClient.setTimeOffset(25200);  
+//  dht.begin();
   client.setCACert(test_root_ca);
   pinMode(BUTTON_PIN, INPUT_PULLUP);
   pinMode(led, OUTPUT); 
   pinMode(den, OUTPUT);
   pinMode(quat, OUTPUT);
+  digitalWrite(den,HIGH);
+  digitalWrite(quat,HIGH);
   myDFPlayer.setTimeOut(500);
 
   myDFPlayer.outputDevice(DFPLAYER_DEVICE_SD);
@@ -130,6 +165,7 @@ void setup() {
   myDFPlayer.EQ(0);    
   myDFPlayer.playFolder(1, 1);
   delay(5000);
+
 }
 
 void loop() {
@@ -144,7 +180,7 @@ void loop() {
     uint8_t* flash_write_buff = (uint8_t*) calloc(i2s_read_len, sizeof(char));
     i2s_read(I2S_PORT, (void*) i2s_read_buff, i2s_read_len, &bytes_read, portMAX_DELAY);
     i2s_read(I2S_PORT, (void*) i2s_read_buff, i2s_read_len, &bytes_read, portMAX_DELAY);   
-    Serial.println(" ***Recording Start*** ");
+   // Serial.println(" ***Recording Start*** ");
     int flash_wr_size = 0;
     while (currentState != HIGH && FLASH_RECORD_SIZE>flash_wr_size) {
        currentState = digitalRead(BUTTON_PIN);
@@ -152,10 +188,10 @@ void loop() {
         i2s_read(I2S_PORT, (void*) i2s_read_buff, i2s_read_len, &bytes_read, portMAX_DELAY);
         i2s_adc_data_scale(flash_write_buff, (uint8_t*)i2s_read_buff, i2s_read_len);
         file.write((const byte*) flash_write_buff, i2s_read_len);
-        ets_printf(".");
+        //ets_printf(".");
         flash_wr_size += i2s_read_len;
     }
-    ets_printf("Complete");
+    //ets_printf("Complete");
     file.close();  
     digitalWrite(led,LOW);
     free(i2s_read_buff);
@@ -186,29 +222,35 @@ void SendFile(DFRobotDFPlayerMini myDFPlayer){
     }
       String boundary = "--------------------------928315622432575348929725";
       String postHeader = "POST /base/recognition HTTP/1.1\r\n";
-      postHeader += "Host: 2dfe-14-236-43-21.ap.ngrok.io\r\n";
+      postHeader += "Host: d24b-14-236-47-31.ap.ngrok.io\r\n";
       postHeader += "Connection: keep-alive\r\n";
       postHeader += "Content-Type: multipart/form-data; boundary=" + boundary + "\r\n";
   
       String keyHeader = "--" + boundary + "\r\n";
       keyHeader += "Content-Disposition: form-data; name=\"name\"\r\n\r\n";
-      keyHeader += "hello\r\n";
+      keyHeader += "device01\r\n";
+
+      String keyHeader1 = "--" + boundary + "\r\n";
+      keyHeader1 += "Content-Disposition: form-data; name=\"device_id\"\r\n\r\n";
+      keyHeader1 += "1\r\n";
       
       String requestHead = "--" + boundary + "\r\n";
       requestHead += "Content-Disposition: form-data; name=\"audio\"; filename=\"recording.wav\"\r\n";
       requestHead += "Content-type: audio/wav\r\n\r\n";
       
       String tail = "\r\n--" + boundary + "--\r\n\r\n";
-      int contentLength = keyHeader.length() + requestHead.length() + fp.size() + tail.length();
+      int contentLength = keyHeader.length() + keyHeader1.length() + requestHead.length() + fp.size() + tail.length();
       postHeader += "Content-Length: " + String(contentLength, DEC) + "\n\n";
     
       Serial.println(postHeader);
       Serial.println(keyHeader);
+      Serial.println(keyHeader1);
       Serial.println(requestHead);
       Serial.println(tail);
       
       client.print(postHeader);
       client.print(keyHeader);
+      client.print(keyHeader1);
       client.print(requestHead);
 
       const int bufSize = 2048;
@@ -260,19 +302,27 @@ void SendFile(DFRobotDFPlayerMini myDFPlayer){
          if(content==1)
          {
           if (state == true){
-            digitalWrite(den,HIGH);
+            digitalWrite(den,LOW);
+            myDFPlayer.playFolder(13,1);
+            delay(1100);
           }
           else{
-            digitalWrite(den,LOW);
+            digitalWrite(den,HIGH);
+            myDFPlayer.playFolder(13,2);
+            delay(1100);
           }
          }
          else if(content==2)
          {
           if (state == true){
-            digitalWrite(quat,HIGH);
+            digitalWrite(quat,LOW);
+            myDFPlayer.playFolder(13,3);
+            delay(1100);
           }
           else{
-            digitalWrite(quat,LOW);
+            digitalWrite(quat,HIGH);
+            myDFPlayer.playFolder(13,4);
+            delay(1100);
           }
          }
          else{
@@ -281,6 +331,9 @@ void SendFile(DFRobotDFPlayerMini myDFPlayer){
           }
           else{
             myDFPlayer.stop();
+            delay(100);
+            myDFPlayer.playFolder(13,5);
+            delay(1100);
           }      
          }
       }
@@ -298,11 +351,20 @@ void SendFile(DFRobotDFPlayerMini myDFPlayer){
           reDate(myDFPlayer,da,mo,ye);     
         }
         else if(coid==3){
+          myDFPlayer.playFolder(4,1);
+          delay(1200); 
           int temp = doc["content"]["main"]["temperature"];
+          playNum(temp);
+          delay(100);
+          myDFPlayer.playFolder(4,2);
+          delay(1200);
                 
         }
-        else {
-          int weid = doc["content"]["main"]["weather_id"];         
+        else if(coid==4){
+          myDFPlayer.playFolder(5,1);
+          delay(1200);
+          int weid = doc["content"]["main"]["weather_id"]; 
+          myDFPlayer.playFolder(5,weid);      
         }
         
       }
@@ -316,132 +378,94 @@ void SendFile(DFRobotDFPlayerMini myDFPlayer){
 }
 void reDate(DFRobotDFPlayerMini myDFPlayer,int da,int mo, int year){
     myDFPlayer.playFolder(2,1);
-    delay(2500);
-//    myDFPlayer.playFolder(10,10);
-//    delay(1100);
-//    myDFPlayer.playFolder(10,8);
-//    delay(1100);
+    delay(2300);
     playNum(da);
     myDFPlayer.playFolder(11,2);
     delay(1200);
-//    myDFPlayer.playFolder(10,5);
     playNum(mo);
-    delay(1000);
+    delay(300);
     myDFPlayer.playFolder(11,1);
-    delay(3000);
+    delay(2500);
 }
 void reGio(DFRobotDFPlayerMini myDFPlayer,int ho,int mi){
       myDFPlayer.playFolder(3,1);
-      delay(2500);
+      delay(2200);
       playNum(ho);
       myDFPlayer.playFolder(3,2);
-      delay(1100);
+      delay(1000);
       playNum(mi);
       myDFPlayer.playFolder(3,3);
-      delay(1100);
-//      if(ho==10){
-//        myDFPlayer.playFolder(10,10);
-//        delay(1100);
-//      }
-//      else if(ho<10){
-//        myDFPlayer.playFolder(10,ho);
-//        delay(1100);
-//      }
-//      else {
-//        int h1 = ho/10;
-//        myDFPlayer.playFolder(10,h1*10);
-//        delay(1100);
-//        int h2 = ho%10;
-//        if(h2==1){
-//           myDFPlayer.playFolder(10,99);
-//           delay(1100);
-//        }
-//        else{
-//          myDFPlayer.playFolder(10,h2);
-//          delay(1100);
-//          }
-//                   
-//      }
-//    myDFPlayer.playFolder(10,10);
-//    delay(1100);
-//    myDFPlayer.playFolder(10,8);
-//    delay(1100);
-//    myDFPlayer.playFolder(11,2);
-//    delay(1200);
-//    myDFPlayer.playFolder(10,5);
-//    delay(1300);
-//    myDFPlayer.playFolder(11,1);
-//    delay(3000);
+      delay(1000);
 }
 void playNum(int ho)
 {
         if(ho==10){
         myDFPlayer.playFolder(10,10);
-        delay(1100);
+        delay(1200);
       }
       else if(ho<10){
         myDFPlayer.playFolder(10,ho);
-        delay(1100);
+        delay(1200);
       }
       else {
         int h1 = ho/10;
         myDFPlayer.playFolder(10,h1*10);
-        delay(1100);
+        delay(1200);
         int h2 = ho%10;
         if(h2==1){
            myDFPlayer.playFolder(10,99);
-           delay(1100);
+           delay(1200);
         }
         else{
           myDFPlayer.playFolder(10,h2);
-          delay(1100);
+          delay(1200);
           }             
       }
 }
-void Date(NTPClient timeClient){
-  timeClient.forceUpdate();
-  formattedDate = timeClient.getFormattedDate();
+//void Date(NTPClient timeClient){
+//  timeClient.forceUpdate();
+//  formattedDate = timeClient.getFormattedDate();
+//
+//  int splitT = formattedDate.indexOf("T");
+//  dayStamp = formattedDate.substring(0, splitT);
+//  Serial.print("Ngày: ");
+//  Serial.println(dayStamp);
+//}
+//void Time(NTPClient timeClient){
+//  timeClient.forceUpdate();
+//  formattedDate = timeClient.getFormattedDate();
+//  int splitT = formattedDate.indexOf("T");
+//  timeStamp = formattedDate.substring(splitT+1, formattedDate.length()-1);
+//  Serial.print("Giờ: ");
+//  Serial.println(timeStamp);
+//
+//}
 
-  int splitT = formattedDate.indexOf("T");
-  dayStamp = formattedDate.substring(0, splitT);
-  Serial.print("Ngày: ");
-  Serial.println(dayStamp);
-}
-void Time(NTPClient timeClient){
-  timeClient.forceUpdate();
-  formattedDate = timeClient.getFormattedDate();
-  int splitT = formattedDate.indexOf("T");
-  timeStamp = formattedDate.substring(splitT+1, formattedDate.length()-1);
-  Serial.print("Giờ: ");
-  Serial.println(timeStamp);
-
-}
-
-void NhietDoDoAm(DHT dht){
- float h = dht.readHumidity();
- float t = dht.readTemperature();
- float f = dht.readTemperature(true);
- if (isnan(h) || isnan(t) || isnan(f)) {
- Serial.println("Failed to read from DHT sensor!");
- return;
- }
- float hif = dht.computeHeatIndex(f, h);
- float hic = dht.computeHeatIndex(t, h, false);
-
- Serial.print("Độ ẩm: ");
- Serial.print(h);
- Serial.print(" %\t");
- Serial.print("Nhiệt độ: ");
- Serial.print(t);
- Serial.print(" *C ");
- Serial.print(f);
- Serial.print(" *F\t");
- Serial.print("Chỉ số nhiệt: ");
- Serial.print(hic);
- Serial.print(" *C ");
- Serial.print(hif);
- Serial.println(" *F");
-}
+//void NhietDoDoAm(DHT dht){
+// float h = dht.readHumidity();
+// float t = dht.readTemperature();
+// float f = dht.readTemperature(true);
+// if (isnan(h) || isnan(t) || isnan(f)) {
+// Serial.println("Failed to read from DHT sensor!");
+// return;
+// }
+// float hif = dht.computeHeatIndex(f, h);
+// float hic = dht.computeHeatIndex(t, h, false);
+//
+// Serial.print("Độ ẩm: ");
+// Serial.print(h);
+// Serial.print(" %\t");
+// Serial.print("Nhiệt độ: ");
+// Serial.print(t);
+// Serial.print(" *C ");
+// Serial.print(f);
+// Serial.print(" *F\t");
+// Serial.print("Chỉ số nhiệt: ");
+// Serial.print(hic);
+// Serial.print(" *C ");
+// Serial.print(hif);
+// Serial.println(" *F");
+//}
 
 // Phần mic INMP441
 void SPIFFSInit(){
