@@ -5,9 +5,6 @@
 #define led  33
 #define den  18
 #define quat 5
-//#define DHTPIN 13 // chân kết nối cảm biến nhiệt độ
-//#define DHTTYPE DHT11
-//DHT dht(DHTPIN, DHTTYPE);
 // Micro INMP441
 #include <driver/i2s.h>
 #include <SPIFFS.h>
@@ -29,18 +26,10 @@ const int headerSize = 44;
 #include <WiFi.h>
 #include <NTPClient.h>
 #include <WiFiUdp.h>
-//const char* wifiName = "Family";
-//const char* password = "danthy2103";
 String wifiname = "";
 String pass = "";
 const char* host = "esp32fs";
 
-//WiFiUDP ntpUDP;
-//NTPClient timeClient(ntpUDP);
-//String formattedDate;
-//String dayStamp;
-//String timeStamp;
-//Down File
 #include <WiFiClient.h>
 #include <WebServer.h>
 #include <ESPmDNS.h>
@@ -139,15 +128,6 @@ void setup() {
   }
   
 
- 
-
-//  Serial.println("");
-//  Serial.println("WiFi connected.");
-//  Serial.println("IP address: ");
-//  Serial.println(WiFi.localIP());
-//  timeClient.begin();
-//  timeClient.setTimeOffset(25200);  
-//  dht.begin();
   client.setCACert(test_root_ca);
   pinMode(BUTTON_PIN, INPUT_PULLUP);
   pinMode(led, OUTPUT); 
@@ -180,7 +160,6 @@ void loop() {
     uint8_t* flash_write_buff = (uint8_t*) calloc(i2s_read_len, sizeof(char));
     i2s_read(I2S_PORT, (void*) i2s_read_buff, i2s_read_len, &bytes_read, portMAX_DELAY);
     i2s_read(I2S_PORT, (void*) i2s_read_buff, i2s_read_len, &bytes_read, portMAX_DELAY);   
-   // Serial.println(" ***Recording Start*** ");
     int flash_wr_size = 0;
     while (currentState != HIGH && FLASH_RECORD_SIZE>flash_wr_size) {
        currentState = digitalRead(BUTTON_PIN);
@@ -188,10 +167,8 @@ void loop() {
         i2s_read(I2S_PORT, (void*) i2s_read_buff, i2s_read_len, &bytes_read, portMAX_DELAY);
         i2s_adc_data_scale(flash_write_buff, (uint8_t*)i2s_read_buff, i2s_read_len);
         file.write((const byte*) flash_write_buff, i2s_read_len);
-        //ets_printf(".");
         flash_wr_size += i2s_read_len;
     }
-    //ets_printf("Complete");
     file.close();  
     digitalWrite(led,LOW);
     free(i2s_read_buff);
@@ -200,17 +177,13 @@ void loop() {
     flash_write_buff = NULL;
     listSPIFFS();
     SendFile(myDFPlayer);
-//    myDFPlayer.next();
   }
 }
 //Send file to Server
 void SendFile(DFRobotDFPlayerMini myDFPlayer){
-    //Serial.println("\nStarting connection to server...");
   if (!client.connect(server, 443))
     Serial.println("Connection failed!");
   else {
-    //Serial.println("Connected to server!");
-
      if(!SPIFFS.begin(true)){
        Serial.println("An Error has occurred while mounting SPIFFS");
        return;
@@ -364,14 +337,10 @@ void SendFile(DFRobotDFPlayerMini myDFPlayer){
           myDFPlayer.playFolder(5,1);
           delay(1200);
           int weid = doc["content"]["main"]["weather_id"]; 
-          myDFPlayer.playFolder(5,weid);      
-        }
-        
+          myDFPlayer.playFolder(5,weid);
+          delay(2000);      
+        }      
       }
-////      int coid = doc["content"]["id"];
-//////      Serial.println(acid);
-//////      Serial.println(coid);
-//      Serial.println(coid);
     }
     client.stop();
   }
@@ -422,50 +391,6 @@ void playNum(int ho)
           }             
       }
 }
-//void Date(NTPClient timeClient){
-//  timeClient.forceUpdate();
-//  formattedDate = timeClient.getFormattedDate();
-//
-//  int splitT = formattedDate.indexOf("T");
-//  dayStamp = formattedDate.substring(0, splitT);
-//  Serial.print("Ngày: ");
-//  Serial.println(dayStamp);
-//}
-//void Time(NTPClient timeClient){
-//  timeClient.forceUpdate();
-//  formattedDate = timeClient.getFormattedDate();
-//  int splitT = formattedDate.indexOf("T");
-//  timeStamp = formattedDate.substring(splitT+1, formattedDate.length()-1);
-//  Serial.print("Giờ: ");
-//  Serial.println(timeStamp);
-//
-//}
-
-//void NhietDoDoAm(DHT dht){
-// float h = dht.readHumidity();
-// float t = dht.readTemperature();
-// float f = dht.readTemperature(true);
-// if (isnan(h) || isnan(t) || isnan(f)) {
-// Serial.println("Failed to read from DHT sensor!");
-// return;
-// }
-// float hif = dht.computeHeatIndex(f, h);
-// float hic = dht.computeHeatIndex(t, h, false);
-//
-// Serial.print("Độ ẩm: ");
-// Serial.print(h);
-// Serial.print(" %\t");
-// Serial.print("Nhiệt độ: ");
-// Serial.print(t);
-// Serial.print(" *C ");
-// Serial.print(f);
-// Serial.print(" *F\t");
-// Serial.print("Chỉ số nhiệt: ");
-// Serial.print(hic);
-// Serial.print(" *C ");
-// Serial.print(hif);
-// Serial.println(" *F");
-//}
 
 // Phần mic INMP441
 void SPIFFSInit(){
@@ -600,12 +525,11 @@ void listSPIFFS(void) {
     } else {
       String fileName = file.name();
       Serial.print("  " + fileName);
-      // File path can be 31 characters maximum in SPIFFS
-      int spaces = 33 - fileName.length(); // Tabulate nicely
+      int spaces = 33 - fileName.length();
       if (spaces < 1) spaces = 1;
       while (spaces--) Serial.print(" ");
       String fileSize = (String) file.size();
-      spaces = 10 - fileSize.length(); // Tabulate nicely
+      spaces = 10 - fileSize.length();
       if (spaces < 1) spaces = 1;
       while (spaces--) Serial.print(" ");
       Serial.println(fileSize + " bytes");
