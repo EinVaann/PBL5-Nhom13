@@ -4,6 +4,7 @@ from rest_framework.decorators import api_view
 from base.serializer import AudioSerializer
 from base.models import Audiofile
 import HMM.recognition
+from members.models import Device
 
 @api_view(['GET'])
 def getData(request):
@@ -22,7 +23,8 @@ def receiveData(request):
         return Response(intent)
     return Response(audioSerializer.errors)
 
-@api_view(['POST'])
-def receiveESP(request):
-    print(request)
-    return Response({'message':'response'})
+@api_view(['GET'])
+def getStatus(request, pk):
+    device = Device.objects.get(id=pk)
+    return Response({'name':device.name,'light':device.light,'fan':device.fan,'music':device.music})
+

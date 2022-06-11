@@ -8,14 +8,18 @@
   </div>
 {% endif %}	
 	<div class="shadow p-4 mb-5 bg-body rounded">
-	<h1>Recent activites</h1>
+	<h1>Devices</h1>
 
 <br/>
         <ul>
-            {% for activities in activity_log.values %}
-              {% for activity in activities%}
-              <li>{{ activity.device_id }}  {{ activity.time_sent }}</li>
-              {% endfor %}
+            {% for device in devices %}
+            <li>
+              <label>
+                {{device.name}}
+              </label>
+              <a href="{% url 'control' device.id %}" class="btn btn-primary btn-lg active" role="button" aria-pressed="true">Control</a>
+            </li>
+          
             {% endfor %}
         </ul>
 		

@@ -7,6 +7,6 @@ urlpatterns = [
     path('logout_user', views.logout_user, name='logout'),
     path('register', views.register_user, name='register'),
     path('activities', views.get_activities, name='activities'),
-    path('test', views.add_base_model, name='test'),
-    path('test2', views.test_model_in_database, name='test2'),
+    path('devices', views.get_device, name='devices'),
+    path('contr_devices/<str:pk>/', views.update_device, name='control'),
 ]
