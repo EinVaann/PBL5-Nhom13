@@ -170,7 +170,7 @@ void setup() {
 
   myDFPlayer.EQ(0);    
   myDFPlayer.playFolder(1, 1);
-  delay(5000);
+  delay(7000);
 
 }
 
@@ -368,12 +368,12 @@ void SendFile(DFRobotDFPlayerMini myDFPlayer){
           if (state == true){
             digitalWrite(den,LOW);
             myDFPlayer.playFolder(13,1);
-            delay(1100);
+            delay(1200);
           }
           else{
             digitalWrite(den,HIGH);
             myDFPlayer.playFolder(13,2);
-            delay(1100);
+            delay(1200);
           }
          }
          else if(content==2)
@@ -381,12 +381,12 @@ void SendFile(DFRobotDFPlayerMini myDFPlayer){
           if (state == true){
             digitalWrite(quat,LOW);
             myDFPlayer.playFolder(13,3);
-            delay(1100);
+            delay(1200);
           }
           else{
             digitalWrite(quat,HIGH);
             myDFPlayer.playFolder(13,4);
-            delay(1100);
+            delay(1200);
           }
          }
          else{
